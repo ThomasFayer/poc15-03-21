@@ -20,7 +20,7 @@ security:
             provider: app_user_provider
             guard:
                 authenticators:
-                    - App\Security\AppCustomAuthenticator
+                    - App\Security\LoginAuthenticator
             logout:
                 path: app_logout
                 # where to redirect after logout
@@ -35,5 +35,14 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        #Lorsque l'url contient le mot admin il faut que
+        #l'utilisateur ai le role admin
+         - { path: ^/admin, roles: ROLE_ADMIN }
+         - { path: ^/profile, roles: ROLE_USER }
+
+    #je creer une hierarchie entre ses roles.
+    #Lorque je suis editeur, j'hérite de user
+    #Si je suis admin, j'hérite de éditeur
+    role_hierarchy:
+        ROLE_EDITOR: ROLE_USER
+        ROLE_ADMIN: ROLE_EDITOR

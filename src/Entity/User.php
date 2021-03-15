@@ -3,19 +3,23 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
- * @UniqueEntity(fields={"email"}, message="There is already an account with this email")
  */
 class User implements UserInterface
 {
+    const ROLE_EDITOR = "ROLE_EDITOR";
+    const ROLE_USER = "ROLE_USER";
+    const ROLE_ADMIN = "ROLE_ADMIN";
+
     /**
      * @ORM\Id
-     * @ORM\GeneratedValue
+     * @ORM\GeneratedValue(strategy="AUTO")
      * @ORM\Column(type="integer")
      */
     private $id;
@@ -26,7 +30,7 @@ class User implements UserInterface
     private $email;
 
     /**
-     * @ORM\Column(type="json")
+     * @ORM\Column(type="array")
      */
     private $roles = [];
 
@@ -35,6 +39,16 @@ class User implements UserInterface
      * @ORM\Column(type="string")
      */
     private $password;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=Evenement::class, mappedBy="User")
+     */
+    private $evenement;
+
+    public function __construct()
+    {
+        $this->evenement = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -98,14 +112,11 @@ class User implements UserInterface
     }
 
     /**
-     * Returning a salt is only needed, if you are not using a modern
-     * hashing algorithm (e.g. bcrypt or sodium) in your security.yaml.
-     *
      * @see UserInterface
      */
-    public function getSalt(): ?string
+    public function getSalt()
     {
-        return null;
+        // not needed when using the "bcrypt" algorithm in security.yaml
     }
 
     /**
@@ -115,5 +126,32 @@ class User implements UserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection|Evenement[]
+     */
+    public function getEvenement(): Collection
+    {
+        return $this->evenement;
+    }
+
+    public function addEvenement(Evenement $evenement): self
+    {
+        if (!$this->evenement->contains($evenement)) {
+            $this->evenement[] = $evenement;
+            $evenement->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEvenement(Evenement $evenement): self
+    {
+        if ($this->evenement->removeElement($evenement)) {
+            $evenement->removeUser($this);
+        }
+
+        return $this;
     }
 }
